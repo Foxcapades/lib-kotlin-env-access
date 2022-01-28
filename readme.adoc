@@ -1,0 +1,28 @@
+= Env Access
+
+Tools and utilities for accessing a process' environment.
+
+.Examples (Allow Blank Env Vars)
+[source, kotlin]
+----
+fun main() {
+
+  // Optional environment variable
+  val foo = Env["FOO"]
+
+  // Environment variable or default value
+  val bar = Env.get("BAR", "default value")
+
+  // Optional environment variable mapped to int
+  val fizz = Env.get("FIZZ") { it.toInt() }
+
+  // Environment variable mapped to int or default
+  val port = Env.get("PORT", 80) { it.toInt() }
+
+  // Required environment variable
+  val serviceName = Env.require("SERVICE_NAME")
+
+  // Required environment variable mapped to long
+  val maxRecords = Env.require("MAX_RECORDS") { it.toLong() }
+}
+----
