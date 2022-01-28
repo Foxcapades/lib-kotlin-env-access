@@ -1,28 +1,183 @@
 = Env Access
+:toc:
 
 Tools and utilities for accessing a process' environment.
 
-.Examples (Allow Blank Env Vars)
+== Usage
+
+This package provides two base environment accessors, `Env` and `NBEnv`.
+
+`Env` reads the environment as is and provides no safeties around empty or blank
+environment variables.
+
+`NBEnv` treats empty or blank environment variables as if they are missing
+entirely.
+
+=== Using `Env`
+
+The `Env` type is useful for cases where the inputs are expected to be able to
+be blank, and callers assume the responsibility of checking for empty/blank
+values.
+
+==== Optional Lookup
+
 [source, kotlin]
 ----
+// Env:
+//   FOUND=found
+//   BLANK=""
 fun main() {
+  val found = Env["FOUND"]
+  assert(found == "found")
 
-  // Optional environment variable
-  val foo = Env["FOO"]
+  val missing = Env["MISSING"]
+  assert(missing == null)
 
-  // Environment variable or default value
-  val bar = Env.get("BAR", "default value")
-
-  // Optional environment variable mapped to int
-  val fizz = Env.get("FIZZ") { it.toInt() }
-
-  // Environment variable mapped to int or default
-  val port = Env.get("PORT", 80) { it.toInt() }
-
-  // Required environment variable
-  val serviceName = Env.require("SERVICE_NAME")
-
-  // Required environment variable mapped to long
-  val maxRecords = Env.require("MAX_RECORDS") { it.toLong() }
+  val blank = Env["BLANK"]
+  assert(blank == "")
 }
 ----
+
+==== Value or Default
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=found
+//   BLANK=""
+fun main() {
+  val found = Env.get("FOUND", "default")
+  assert(found == "found")
+
+  val missing = Env.get("MISSING", "default")
+  assert(missing == "default")
+
+  val blank = Env.get("BLANK", "default")
+  assert(blank == "")
+}
+----
+
+==== Map Value
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=1234
+//   BLANK=""
+fun main() {
+  val found = Env.get("FOUND") { it.toInt() }
+  assert(found == 1234)
+
+  val missing = Env.get("MISSING") { it.toInt() }
+  assert(missing == null)
+
+  // Throws NumberFormatException as "" is not a valid int value.
+  val blank1 = Env.get("BLANK") { it.toInt() }
+
+  val blank2 = Env.get("BLANK") { it.ifBlank { return@get 33 }.toInt() }
+  assert(blank2 == 33)
+}
+----
+
+==== Map Value or Default
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=1234
+//   BLANK=""
+fun main() {
+  val found = Env.get("FOUND", 4321) { it.toInt() }
+  assert(found == 1234)
+
+  val missing = Env.get("MISSING", 4321) { it.toInt() }
+  assert(missing == 4321)
+
+  // Throws NumberFormatException as "" is not a valid int value.
+  val blank1 = Env.get("BLANK", 4321) { it.toInt() }
+
+  val blank2 = Env.get("BLANK", 4321) { it.ifBlank { return@get 33 }.toInt() }
+  assert(blank2 == 33)
+}
+----
+
+// -------------------------------------------------------------------------- //
+
+=== Using `NBEnv`
+
+==== Optional Lookup
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=found
+//   BLANK=""
+fun main() {
+  val found = NBEnv["FOUND"]
+  assert(found == "found")
+
+  val missing = NBEnv["MISSING"]
+  assert(missing == null)
+
+  val blank = NBEnv["BLANK"]
+  assert(blank == null)
+}
+----
+
+==== Value or Default
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=found
+//   BLANK=""
+fun main() {
+  val found = NBEnv.get("FOUND", "default")
+  assert(found == "found")
+
+  val missing = NBEnv.get("MISSING", "default")
+  assert(missing == "default")
+
+  val blank = NBEnv.get("BLANK", "default")
+  assert(blank == "default")
+}
+----
+
+==== Map Value
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=1234
+//   BLANK=""
+fun main() {
+  val found = NBEnv.get("FOUND") { it.toInt() }
+  assert(found == 1234)
+
+  val missing = NBEnv.get("MISSING") { it.toInt() }
+  assert(missing == null)
+
+  val blank = NBEnv.get("BLANK") { it.toInt() }
+  assert(blank == null)
+}
+----
+
+==== Map Value or Default
+
+[source, kotlin]
+----
+// Env:
+//   FOUND=1234
+//   BLANK=""
+fun main() {
+  val found = NBEnv.get("FOUND", 4321) { it.toInt() }
+  assert(found == 1234)
+
+  val missing = NBEnv.get("MISSING", 4321) { it.toInt() }
+  assert(missing == 4321)
+
+  val blank = NBEnv.get("BLANK", 4321) { it.toInt() }
+  assert(blank == 4321)
+}
+----
+
